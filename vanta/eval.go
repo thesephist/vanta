@@ -13,9 +13,6 @@ func eval(v val, env *Environment) val {
 			case "def":
 				name := v.cdr().car()
 				val := eval(v.cdr().cdr().car(), env)
-				// TODO: Ugh, string(name) is at least a copy. Optimize later
-				// IDEA: maybe for values originating from strings, we keep a string
-				// value in the val type... idk
 				env.put(string(name.str), val)
 				return val
 			case "do":

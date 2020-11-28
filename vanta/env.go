@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"math/rand"
 	"os"
 	"strconv"
+	"time"
 )
 
 func New() Environment {
@@ -24,8 +26,12 @@ type Environment struct {
 var globalScope = map[string]val{
 	"true":  boolean(true),
 	"false": boolean(false),
-	"car":   fn(func(args val) val { return args.car().car() }),
-	"cdr":   fn(func(args val) val { return args.car().cdr() }),
+	"car": fn(func(args val) val {
+		return args.car().car()
+	}),
+	"cdr": fn(func(args val) val {
+		return args.car().cdr()
+	}),
 	"cons": fn(func(args val) val {
 		return list(args.car(), args.cdr().car())
 	}),
@@ -37,9 +43,29 @@ var globalScope = map[string]val{
 			return number(0)
 		}
 	}),
-	// TODO: get-slice, set-slice!, point, sin, cos, floor, rand, time
+	// TODO: get-slice, set-slice!
+	"point": fn(func(args val) val {
+		str := args.car().str
+		return number(float64(str[0]))
+	}),
 	"char": fn(func(args val) val {
 		return str([]byte{byte(args.car().number)})
+	}),
+	"sin": fn(func(args val) val {
+		return number(math.Sin(args.car().number))
+	}),
+	"cos": fn(func(args val) val {
+		return number(math.Cos(args.car().number))
+	}),
+	"floor": fn(func(args val) val {
+		return number(math.Trunc(args.car().number))
+	}),
+	"rand": fn(func(_ val) val {
+		return number(rand.Float64())
+	}),
+	"time": fn(func(_ val) val {
+		unixSeconds := float64(time.Now().UnixNano()) / 1e9
+		return number(unixSeconds)
 	}),
 	"=": fn(func(args val) val {
 		return boolean(args.car().Equals(args.cdr().car()))
@@ -65,13 +91,21 @@ var globalScope = map[string]val{
 		}
 	}),
 	"+": fn(func(args val) val {
-		acc := args.car().number
 		rest := args.cdr()
+		if args.car().tag == tnumber {
+			acc := args.car().number
+			for !rest.isNull() {
+				acc += rest.car().number
+				rest = rest.cdr()
+			}
+			return number(acc)
+		}
+		acc := args.car().str
 		for !rest.isNull() {
-			acc += rest.car().number
+			acc = append(acc, rest.car().str...)
 			rest = rest.cdr()
 		}
-		return number(acc)
+		return str(acc)
 	}),
 	"-": fn(func(args val) val {
 		acc := args.car().number
@@ -118,10 +152,17 @@ var globalScope = map[string]val{
 		}
 		return number(float64(acc))
 	}),
-	// TODO: integer and byte string ops for &|^
 	"&": fn(func(args val) val {
-		acc := args.car().asBool()
 		rest := args.cdr()
+		if args.car().tag == tnumber {
+			acc := int64(args.car().number)
+			for !rest.isNull() {
+				acc = acc & int64(rest.car().number)
+				rest = rest.cdr()
+			}
+			return number(float64(acc))
+		}
+		acc := args.car().asBool()
 		for !rest.isNull() {
 			acc = acc && rest.car().asBool()
 			rest = rest.cdr()
@@ -129,8 +170,16 @@ var globalScope = map[string]val{
 		return boolean(acc)
 	}),
 	"|": fn(func(args val) val {
-		acc := args.car().asBool()
 		rest := args.cdr()
+		if args.car().tag == tnumber {
+			acc := int64(args.car().number)
+			for !rest.isNull() {
+				acc = acc | int64(rest.car().number)
+				rest = rest.cdr()
+			}
+			return number(float64(acc))
+		}
+		acc := args.car().asBool()
 		for !rest.isNull() {
 			acc = acc || rest.car().asBool()
 			rest = rest.cdr()
@@ -138,15 +187,22 @@ var globalScope = map[string]val{
 		return boolean(acc)
 	}),
 	"^": fn(func(args val) val {
-		acc := args.car().asBool()
 		rest := args.cdr()
+		if args.car().tag == tnumber {
+			acc := int64(args.car().number)
+			for !rest.isNull() {
+				acc = acc ^ int64(rest.car().number)
+				rest = rest.cdr()
+			}
+			return number(float64(acc))
+		}
+		acc := args.car().asBool()
 		for !rest.isNull() {
 			acc = acc != rest.car().asBool()
 			rest = rest.cdr()
 		}
 		return boolean(acc)
 	}),
-	// TODO: &, |, ^
 	"type": fn(func(args val) val {
 		switch args.car().tag {
 		case tnull:
@@ -165,7 +221,22 @@ var globalScope = map[string]val{
 			panic("Unknown val type:" + strconv.Itoa(args.car().tag))
 		}
 	}),
-	// TODO: string->number, number->string
+	"string->number": fn(func(args val) val {
+		operand := args.car()
+		if operand.tag == tstr {
+			n, err := strconv.ParseFloat(string(operand.str), 64)
+			if err != nil {
+				return number(0)
+			} else {
+				return number(n)
+			}
+		} else {
+			return number(0)
+		}
+	}),
+	"number->string": fn(func(args val) val {
+		return str([]byte(strconv.FormatFloat(args.car().number, 'f', 8, 64)))
+	}),
 	"print": fn(func(args val) val {
 		rest := args
 		for {
@@ -205,7 +276,7 @@ func (env *Environment) get(name string) val {
 		return v
 	} else {
 		if env.parent == nil {
-			panic("Could not look up name " + name)
+			return null()
 		} else {
 			return env.parent.get(name)
 		}

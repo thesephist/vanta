@@ -75,7 +75,7 @@ func (v val) Equals(w val) bool {
 	case tstr, tsymbol:
 		return bytes.Equal(v.str, w.str)
 	case tcons:
-		return v.car().Equals(w.car()) && w.cdr().Equals(w.cdr())
+		return v.car().Equals(w.car()) && v.cdr().Equals(w.cdr())
 	case tfn, tmacro:
 		return false
 	default:

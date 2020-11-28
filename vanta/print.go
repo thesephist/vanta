@@ -1,7 +1,6 @@
 package vanta
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -15,10 +14,15 @@ func Print(v val) string {
 	case tboolfalse:
 		return "false"
 	case tnumber:
-		return fmt.Sprintf("%f", v.number)
+		if i := int64(v.number); v.number == float64(i) {
+			return strconv.FormatInt(i, 10)
+		}
+		return strconv.FormatFloat(v.number, 'f', 8, 64)
 	case tstr:
-		// TODO: use Klisp logic here instead
-		return strconv.Quote(string(v.str))
+		s := string(v.str)
+		strings.ReplaceAll(s, "\\", "\\\\")
+		strings.ReplaceAll(s, "'", "\\'")
+		return s
 	case tsymbol:
 		return string(v.str)
 	case tcons:
@@ -40,9 +44,8 @@ func Print(v val) string {
 			}
 		}
 		return "(" + strings.Join(acc, " ") + ")"
-	case tfn, tmacro:
+	default:
+		// tfn, tmacro
 		return "(function)"
 	}
-
-	panic("unreachable.")
 }

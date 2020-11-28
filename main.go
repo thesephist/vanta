@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,23 +12,39 @@ import (
 	"github.com/thesephist/vanta/vanta"
 )
 
+const Version = "0.1"
+
 func main() {
+	flag.Usage = func() {
+		fmt.Println("Vanta is a fast Klisp interpreter.")
+		flag.PrintDefaults()
+	}
+	interactive := flag.Bool("i", false, "Start a repl after executing files")
+
+	// Collect and write flags
+	flag.Parse()
+	args := flag.Args()
+
+	// Create execution environment
 	env := vanta.New()
 
-	// if given a file, exec it
-	for _, runPath := range os.Args[1:] {
-		runFile, err := ioutil.ReadFile(runPath)
-		if err != nil {
-			fmt.Printf("Could not open %s: %s\n", runPath, err.Error())
-		} else {
-			env.Eval(vanta.Read(string(runFile)))
+	// If given a file, exec it
+	if len(args) > 0 {
+		for _, runPath := range args {
+			runFile, err := ioutil.ReadFile(runPath)
+			if err != nil {
+				fmt.Printf("Could not open %s: %s\n", runPath, err.Error())
+			} else {
+				env.Eval(vanta.Read(string(runFile)))
+			}
 		}
 	}
 
+	// If we should open a repl, start a read-eval-print loop
 	stdin, _ := os.Stdin.Stat()
-	if (stdin.Mode() & os.ModeCharDevice) != 0 {
+	if *interactive || (stdin.Mode()&os.ModeCharDevice) != 0 {
 		// REPL
-		fmt.Println("Klisp interpreter v0.1-vanta.")
+		fmt.Printf("Klisp interpreter v%s-vanta.\n", Version)
 		reader := bufio.NewReader(os.Stdin)
 
 		for {
