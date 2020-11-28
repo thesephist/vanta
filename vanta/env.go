@@ -10,32 +10,39 @@ import (
 	"time"
 )
 
+// New returns a new top-level environment in which Klisp programs can be
+// evaluated. Because Klisp doesn't have the traditional notion of a "VM",
+// initialize a new Environment to evaluate a form.
 func New() Environment {
 	return newEnvironment(nil)
 }
 
-func (env *Environment) Eval(v val) val {
+// Eval evaluates Klisp forms passed as Vals in the Environment Env.
+func (env *Environment) Eval(v Val) Val {
 	return eval(v, env)
 }
 
+// Environment represents a lexical scope in which Klisp forms are evaluated.
+// It contains a lexical scope that contains bound variable names.
 type Environment struct {
-	scope  map[string]val
+	scope  map[string]Val
 	parent *Environment
 }
 
-var globalScope = map[string]val{
+// globalScope contains all built-in functions and values in Klisp
+var globalScope = map[string]Val{
 	"true":  boolean(true),
 	"false": boolean(false),
-	"car": fn(func(args val) val {
+	"car": fn(func(args Val) Val {
 		return args.car().car()
 	}),
-	"cdr": fn(func(args val) val {
+	"cdr": fn(func(args Val) Val {
 		return args.car().cdr()
 	}),
-	"cons": fn(func(args val) val {
+	"cons": fn(func(args Val) Val {
 		return list(args.car(), args.cdr().car())
 	}),
-	"len": fn(func(args val) val {
+	"len": fn(func(args Val) Val {
 		switch args.car().tag {
 		case tstr, tsymbol:
 			return number(float64(len(args.car().str)))
@@ -43,34 +50,34 @@ var globalScope = map[string]val{
 			return number(0)
 		}
 	}),
-	// TODO: get-slice, set-slice!
-	"point": fn(func(args val) val {
+	// TODO: implement get-slice, set-slice! for feature parity with Ink Klisp
+	"point": fn(func(args Val) Val {
 		str := args.car().str
 		return number(float64(str[0]))
 	}),
-	"char": fn(func(args val) val {
+	"char": fn(func(args Val) Val {
 		return str([]byte{byte(args.car().number)})
 	}),
-	"sin": fn(func(args val) val {
+	"sin": fn(func(args Val) Val {
 		return number(math.Sin(args.car().number))
 	}),
-	"cos": fn(func(args val) val {
+	"cos": fn(func(args Val) Val {
 		return number(math.Cos(args.car().number))
 	}),
-	"floor": fn(func(args val) val {
+	"floor": fn(func(args Val) Val {
 		return number(math.Trunc(args.car().number))
 	}),
-	"rand": fn(func(_ val) val {
+	"rand": fn(func(_ Val) Val {
 		return number(rand.Float64())
 	}),
-	"time": fn(func(_ val) val {
+	"time": fn(func(_ Val) Val {
 		unixSeconds := float64(time.Now().UnixNano()) / 1e9
 		return number(unixSeconds)
 	}),
-	"=": fn(func(args val) val {
+	"=": fn(func(args Val) Val {
 		return boolean(args.car().Equals(args.cdr().car()))
 	}),
-	"<": fn(func(args val) val {
+	"<": fn(func(args Val) Val {
 		switch args.car().tag {
 		case tnumber:
 			return boolean(args.car().number < args.cdr().car().number)
@@ -80,7 +87,7 @@ var globalScope = map[string]val{
 			return boolean(false)
 		}
 	}),
-	">": fn(func(args val) val {
+	">": fn(func(args Val) Val {
 		switch args.car().tag {
 		case tnumber:
 			return boolean(args.car().number > args.cdr().car().number)
@@ -90,7 +97,7 @@ var globalScope = map[string]val{
 			return boolean(false)
 		}
 	}),
-	"+": fn(func(args val) val {
+	"+": fn(func(args Val) Val {
 		rest := args.cdr()
 		if args.car().tag == tnumber {
 			acc := args.car().number
@@ -107,7 +114,7 @@ var globalScope = map[string]val{
 		}
 		return str(acc)
 	}),
-	"-": fn(func(args val) val {
+	"-": fn(func(args Val) Val {
 		acc := args.car().number
 		rest := args.cdr()
 		for !rest.isNull() {
@@ -116,7 +123,7 @@ var globalScope = map[string]val{
 		}
 		return number(acc)
 	}),
-	"*": fn(func(args val) val {
+	"*": fn(func(args Val) Val {
 		acc := args.car().number
 		rest := args.cdr()
 		for !rest.isNull() {
@@ -125,7 +132,7 @@ var globalScope = map[string]val{
 		}
 		return number(acc)
 	}),
-	"/": fn(func(args val) val {
+	"/": fn(func(args Val) Val {
 		acc := args.car().number
 		rest := args.cdr()
 		for !rest.isNull() {
@@ -134,7 +141,7 @@ var globalScope = map[string]val{
 		}
 		return number(acc)
 	}),
-	"#": fn(func(args val) val {
+	"#": fn(func(args Val) Val {
 		acc := args.car().number
 		rest := args.cdr()
 		for !rest.isNull() {
@@ -143,7 +150,7 @@ var globalScope = map[string]val{
 		}
 		return number(acc)
 	}),
-	"%": fn(func(args val) val {
+	"%": fn(func(args Val) Val {
 		acc := int64(args.car().number)
 		rest := args.cdr()
 		for !rest.isNull() {
@@ -152,7 +159,7 @@ var globalScope = map[string]val{
 		}
 		return number(float64(acc))
 	}),
-	"&": fn(func(args val) val {
+	"&": fn(func(args Val) Val {
 		rest := args.cdr()
 		if args.car().tag == tnumber {
 			acc := int64(args.car().number)
@@ -169,7 +176,7 @@ var globalScope = map[string]val{
 		}
 		return boolean(acc)
 	}),
-	"|": fn(func(args val) val {
+	"|": fn(func(args Val) Val {
 		rest := args.cdr()
 		if args.car().tag == tnumber {
 			acc := int64(args.car().number)
@@ -186,7 +193,7 @@ var globalScope = map[string]val{
 		}
 		return boolean(acc)
 	}),
-	"^": fn(func(args val) val {
+	"^": fn(func(args Val) Val {
 		rest := args.cdr()
 		if args.car().tag == tnumber {
 			acc := int64(args.car().number)
@@ -203,7 +210,7 @@ var globalScope = map[string]val{
 		}
 		return boolean(acc)
 	}),
-	"type": fn(func(args val) val {
+	"type": fn(func(args Val) Val {
 		switch args.car().tag {
 		case tnull:
 			return str([]byte("()"))
@@ -218,10 +225,10 @@ var globalScope = map[string]val{
 		case tfn, tmacro:
 			return str([]byte("function"))
 		default:
-			panic("Unknown val type:" + strconv.Itoa(args.car().tag))
+			panic("Unknown Val type:" + strconv.Itoa(args.car().tag))
 		}
 	}),
-	"string->number": fn(func(args val) val {
+	"string->number": fn(func(args Val) Val {
 		operand := args.car()
 		if operand.tag == tstr {
 			n, err := strconv.ParseFloat(string(operand.str), 64)
@@ -234,10 +241,10 @@ var globalScope = map[string]val{
 			return number(0)
 		}
 	}),
-	"number->string": fn(func(args val) val {
+	"number->string": fn(func(args Val) Val {
 		return str([]byte(strconv.FormatFloat(args.car().number, 'f', 8, 64)))
 	}),
-	"print": fn(func(args val) val {
+	"print": fn(func(args Val) Val {
 		rest := args
 		for {
 			cur := rest.car()
@@ -258,6 +265,7 @@ var globalScope = map[string]val{
 	}),
 }
 
+// Create a (local) environment, optionally with a parent environment/scope provided.
 func newEnvironment(parent *Environment) Environment {
 	if parent == nil {
 		return Environment{
@@ -265,13 +273,13 @@ func newEnvironment(parent *Environment) Environment {
 		}
 	} else {
 		return Environment{
-			scope:  map[string]val{},
+			scope:  map[string]Val{},
 			parent: parent,
 		}
 	}
 }
 
-func (env *Environment) get(name string) val {
+func (env *Environment) get(name string) Val {
 	if v, prs := env.scope[name]; prs {
 		return v
 	} else {
@@ -283,6 +291,6 @@ func (env *Environment) get(name string) val {
 	}
 }
 
-func (env *Environment) put(name string, v val) {
+func (env *Environment) put(name string, v Val) {
 	env.scope[name] = v
 }

@@ -17,15 +17,19 @@ const (
 )
 
 type cons struct {
-	car val
-	cdr val
+	car Val
+	cdr Val
 }
 
 func (c cons) String() string {
-	return Print(val{tag: tcons, cell: &c})
+	return Print(Val{tag: tcons, cell: &c})
 }
 
-type val struct {
+// Val opaquely represents a valid Klisp value. It can be one of either: null
+// (), boolean (true, false), number, string, symbol, list (a cons cell), a
+// function, or a macro. Call val.String() to get a string representation, and
+// val.Equals(val) to compare equality. Read, Eval, and Print operate on Vals.
+type Val struct {
 	tag int
 	// number
 	number float64
@@ -34,10 +38,10 @@ type val struct {
 	// list
 	cell *cons
 	// fn, macro
-	fn func(val) val
+	fn func(Val) Val
 }
 
-func (v val) clone() val {
+func (v Val) clone() Val {
 	dststr := make([]byte, len(v.str))
 	copy(dststr, v.str)
 
@@ -49,7 +53,7 @@ func (v val) clone() val {
 		}
 	}
 
-	return val{
+	return Val{
 		tag:    v.tag,
 		number: v.number,
 		str:    dststr,
@@ -58,11 +62,14 @@ func (v val) clone() val {
 	}
 }
 
-func (v val) String() string {
+// String returns an S-expression representation of the given Val.
+func (v Val) String() string {
 	return Print(v)
 }
 
-func (v val) Equals(w val) bool {
+// Equals compares two Vals *by value*. This equality check is a deep equality
+// for everything except functions and macros.
+func (v Val) Equals(w Val) bool {
 	if v.tag != w.tag {
 		return false
 	}
@@ -76,14 +83,13 @@ func (v val) Equals(w val) bool {
 		return bytes.Equal(v.str, w.str)
 	case tcons:
 		return v.car().Equals(w.car()) && v.cdr().Equals(w.cdr())
-	case tfn, tmacro:
-		return false
 	default:
-		panic("unreachable.")
+		// tfn, tmacro
+		return false
 	}
 }
 
-func (v val) car() val {
+func (v Val) car() Val {
 	if v.tag == tcons {
 		return v.cell.car
 	} else {
@@ -91,7 +97,7 @@ func (v val) car() val {
 	}
 }
 
-func (v val) cdr() val {
+func (v Val) cdr() Val {
 	if v.tag == tcons {
 		return v.cell.cdr
 	} else {
@@ -99,49 +105,49 @@ func (v val) cdr() val {
 	}
 }
 
-func (v val) isNull() bool {
+func (v Val) isNull() bool {
 	return v.tag == tnull
 }
 
-func (v val) asBool() bool {
+func (v Val) asBool() bool {
 	return v.tag == tbooltrue
 }
 
-func null() val {
-	return val{tag: tnull}
+func null() Val {
+	return Val{tag: tnull}
 }
 
-func boolean(v bool) val {
+func boolean(v bool) Val {
 	if v {
-		return val{tag: tbooltrue}
+		return Val{tag: tbooltrue}
 	} else {
-		return val{tag: tboolfalse}
+		return Val{tag: tboolfalse}
 	}
 }
 
-func number(n float64) val {
-	return val{tag: tnumber, number: n}
+func number(n float64) Val {
+	return Val{tag: tnumber, number: n}
 }
 
-func str(s []byte) val {
-	return val{tag: tstr, str: s}
+func str(s []byte) Val {
+	return Val{tag: tstr, str: s}
 }
 
-func symbol(s []byte) val {
-	return val{tag: tsymbol, str: s}
+func symbol(s []byte) Val {
+	return Val{tag: tsymbol, str: s}
 }
 
-func list(a, b val) val {
-	return val{tag: tcons, cell: &cons{
+func list(a, b Val) Val {
+	return Val{tag: tcons, cell: &cons{
 		car: a,
 		cdr: b,
 	}}
 }
 
-func fn(f func(val) val) val {
-	return val{tag: tfn, fn: f}
+func fn(f func(Val) Val) Val {
+	return Val{tag: tfn, fn: f}
 }
 
-func macro(f func(val) val) val {
-	return val{tag: tmacro, fn: f}
+func macro(f func(Val) Val) Val {
+	return Val{tag: tmacro, fn: f}
 }

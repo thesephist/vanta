@@ -5,7 +5,9 @@ import (
 	"strings"
 )
 
-func Print(v val) string {
+// Print transforms a Klisp value v back into a string, and hence is the
+// inverse function of Read.
+func Print(v Val) string {
 	switch v.tag {
 	case tnull:
 		return "()"

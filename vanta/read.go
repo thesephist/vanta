@@ -56,7 +56,9 @@ func (r *reader) forward() {
 	}
 }
 
-func parse(r *reader) val {
+// parse contains most of the S-expression parsing logic in Read, and calls
+// itself recursively to parse one (1) S-expression.
+func parse(r *reader) Val {
 	for r.index < len(r.str) {
 		switch r.peek() {
 		case ')':
@@ -136,7 +138,9 @@ func parse(r *reader) val {
 	return null()
 }
 
-func Read(s string) val {
+// Read parses a string input into a (do...) S-expression containing all parsed
+// S-expressions in the input, and therefore is (loosely) the inverse of Print.
+func Read(s string) Val {
 	r := newReader(strings.TrimSpace(s))
 
 	r.forward() // consume leading comments
@@ -147,6 +151,8 @@ func Read(s string) val {
 	for r.index < len(r.str) {
 		switch r.peek() {
 		case ')':
+			// Without this guard, an extra right paren causes an infinite loop
+			// in the reader as parse() will immediately return null.
 			return prog
 		default:
 			term := list(parse(&r), null())

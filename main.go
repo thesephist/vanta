@@ -41,8 +41,7 @@ func main() {
 	}
 
 	// If we should open a repl, start a read-eval-print loop
-	stdin, _ := os.Stdin.Stat()
-	if *interactive || (stdin.Mode()&os.ModeCharDevice) != 0 {
+	if *interactive || len(args) == 0 {
 		// REPL
 		fmt.Printf("Klisp interpreter v%s-vanta.\n", Version)
 		reader := bufio.NewReader(os.Stdin)
