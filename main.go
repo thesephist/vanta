@@ -15,8 +15,7 @@ func main() {
 	env := vanta.New()
 
 	// if given a file, exec it
-	if len(os.Args) >= 2 {
-		runPath := os.Args[1]
+	for _, runPath := range os.Args[1:] {
 		runFile, err := ioutil.ReadFile(runPath)
 		if err != nil {
 			fmt.Printf("Could not open %s: %s\n", runPath, err.Error())

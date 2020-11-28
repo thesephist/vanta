@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"os"
 	"strconv"
 )
 
@@ -36,7 +37,10 @@ var globalScope = map[string]val{
 			return number(0)
 		}
 	}),
-	// TODO: get-slice, set-slice!, char, point, sin, cos, floor, rand, time
+	// TODO: get-slice, set-slice!, point, sin, cos, floor, rand, time
+	"char": fn(func(args val) val {
+		return str([]byte{byte(args.car().number)})
+	}),
 	"=": fn(func(args val) val {
 		return boolean(args.car().Equals(args.cdr().car()))
 	}),
@@ -164,8 +168,19 @@ var globalScope = map[string]val{
 	// TODO: string->number, number->string
 	"print": fn(func(args val) val {
 		rest := args
-		for !rest.isNull() {
-			fmt.Printf(Print(rest.car()))
+		for {
+			cur := rest.car()
+			if cur.tag == tstr || cur.tag == tsymbol {
+				os.Stdout.Write(cur.str)
+			} else {
+				fmt.Printf(Print(cur))
+			}
+			if !rest.cdr().isNull() {
+				fmt.Printf(" ")
+			} else {
+				break
+			}
+
 			rest = rest.cdr()
 		}
 		return null()
