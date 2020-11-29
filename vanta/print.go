@@ -31,15 +31,17 @@ func Print(v Val) string {
 		term := v
 		acc := []string{}
 		for {
-			if term.tag == tcons && term.cell.cdr.tag == tcons {
-				acc = append(acc, Print(term.cell.car))
-				term = term.cell.cdr
-			} else if term.tag == tcons && term.cell.cdr.tag == tnull {
-				acc = append(acc, Print(term.cell.car))
-				break
-			} else if term.tag == tcons {
-				acc = append(acc, Print(term.cell.car), ".")
-				term = term.cell.cdr
+			if term.tag == tcons {
+				if term.cell.cdr.tag == tcons {
+					acc = append(acc, Print(term.cell.car))
+					term = term.cell.cdr
+				} else if term.cell.cdr.tag == tnull {
+					acc = append(acc, Print(term.cell.car))
+					break
+				} else {
+					acc = append(acc, Print(term.cell.car), ".")
+					term = term.cell.cdr
+				}
 			} else {
 				acc = append(acc, Print(term))
 				break

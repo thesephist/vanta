@@ -271,24 +271,24 @@ func newEnvironment(parent *Environment) Environment {
 		return Environment{
 			scope: globalScope,
 		}
-	} else {
-		return Environment{
-			scope:  map[string]Val{},
-			parent: parent,
-		}
+	}
+
+	return Environment{
+		scope:  map[string]Val{},
+		parent: parent,
 	}
 }
 
 func (env *Environment) get(name string) Val {
 	if v, prs := env.scope[name]; prs {
 		return v
-	} else {
-		if env.parent == nil {
-			return null()
-		} else {
-			return env.parent.get(name)
-		}
 	}
+
+	if env.parent == nil {
+		return null()
+	}
+
+	return env.parent.get(name)
 }
 
 func (env *Environment) put(name string, v Val) {

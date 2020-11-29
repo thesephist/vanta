@@ -92,17 +92,17 @@ func (v Val) Equals(w Val) bool {
 func (v Val) car() Val {
 	if v.tag == tcons {
 		return v.cell.car
-	} else {
-		panic("tried to take car of " + v.String())
 	}
+
+	panic("tried to take car of " + v.String())
 }
 
 func (v Val) cdr() Val {
 	if v.tag == tcons {
 		return v.cell.cdr
-	} else {
-		panic("tried to take car of " + v.String())
 	}
+
+	panic("tried to take car of " + v.String())
 }
 
 func (v Val) isNull() bool {
@@ -120,9 +120,9 @@ func null() Val {
 func boolean(v bool) Val {
 	if v {
 		return Val{tag: tbooltrue}
-	} else {
-		return Val{tag: tboolfalse}
 	}
+
+	return Val{tag: tboolfalse}
 }
 
 func number(n float64) Val {

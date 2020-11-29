@@ -20,29 +20,34 @@ func eval(v Val, env *Environment) Val {
 				return val
 			case "do":
 				rest := v.cdr()
-				for rest.tag == tcons && rest.cdr().tag != tnull {
+				var cdr Val
+				for rest.tag == tcons {
+					if cdr = rest.cdr(); cdr.isNull() {
+						return eval(rest.car(), env)
+					}
+
 					eval(rest.car(), env)
-					rest = rest.cdr()
+					rest = cdr
 				}
-				return eval(rest.car(), env)
 			case "if":
 				cond := v.cdr().car()
-				conseq := v.cdr().cdr().car()
-				altern := v.cdr().cdr().cdr().car()
+				var body Val
 				if eval(cond, env).tag == tbooltrue {
-					return eval(conseq, env)
+					body = v.cdr().cdr().car()
 				} else {
-					return eval(altern, env)
+					body = v.cdr().cdr().cdr().car()
 				}
+				return eval(body, env)
 			case "fn":
 				paramsTpl := v.cdr().car()
 				body := v.cdr().cdr().car()
 				return fn(func(args Val) Val {
 					params := paramsTpl.clone()
 					envc := newEnvironment(env)
+					var param, arg Val
 					for !params.isNull() && !args.isNull() {
-						param := params.car()
-						arg := args.car()
+						param = params.car()
+						arg = args.car()
 						envc.put(string(param.str), arg)
 
 						params = params.cdr()
@@ -58,9 +63,10 @@ func eval(v Val, env *Environment) Val {
 					args = list(args, null())
 					params := paramsTpl.clone()
 					envc := newEnvironment(env)
+					var param, arg Val
 					for !params.isNull() && !args.isNull() {
-						param := params.car()
-						arg := args.car()
+						param = params.car()
+						arg = args.car()
 						envc.put(string(param.str), arg)
 
 						params = params.cdr()
@@ -83,8 +89,7 @@ func eval(v Val, env *Environment) Val {
 			}
 			return fn.fn(head)
 		} else if fn.tag == tmacro {
-			t := fn.fn(argcs)
-			return eval(t, env)
+			return eval(fn.fn(argcs), env)
 		} else {
 			panic("attempted to call a non-callable value at " + v.String())
 		}
