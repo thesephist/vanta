@@ -50,7 +50,7 @@ This repository contains _just the interpreter_. To do anything useful, you'll p
 
 Mostly for fun. I enjoy writing small Klisp programs to solve problems, but sometimes the [Ink-based interpreter](https://github.com/thesephist/klisp) is not as fast as I'd like. I also wanted to try implementing a Lisp in Go, and Klisp was already there for me, so I thought I'd make a much faster Klisp interpreter.
 
-Even with the current naive implementation, Vanta is around **40-45x** faster than the Ink-based interpreter in my limited testing on the standard library tests. But this probably says more about how slow Ink is than how fast Go or Vanta is.
+Even with the current naive implementation, Vanta is around **50x** faster than the Ink-based interpreter in my limited testing on the standard library tests. But this says more about how slow Ink is than how fast Go or Vanta is.
 
 ## Go API
 
