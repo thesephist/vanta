@@ -42,7 +42,7 @@ func eval(v Val, env *Environment) Val {
 				paramsTpl := v.cdr().car()
 				body := v.cdr().cdr().car()
 				return fn(func(args Val) Val {
-					params := paramsTpl.clone()
+					params := paramsTpl
 					envc := newEnvironment(env)
 					var param, arg Val
 					for !params.isNull() && !args.isNull() {
@@ -61,7 +61,7 @@ func eval(v Val, env *Environment) Val {
 				body := v.cdr().cdr().car()
 				return macro(func(args Val) Val {
 					args = list(args, null())
-					params := paramsTpl.clone()
+					params := paramsTpl
 					envc := newEnvironment(env)
 					var param, arg Val
 					for !params.isNull() && !args.isNull() {
