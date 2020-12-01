@@ -10,13 +10,13 @@ func eval(v Val, env *Environment) Val {
 	switch v.tag {
 	case tcons:
 		if v.car().tag == tsymbol {
-			switch string(v.car().str) {
+			switch v.car().symb {
 			case "quote":
 				return v.cdr().car()
 			case "def":
 				name := v.cdr().car()
 				val := eval(v.cdr().cdr().car(), env)
-				env.put(string(name.str), val)
+				env.put(name.symb, val)
 				return val
 			case "do":
 				rest := v.cdr()
@@ -48,7 +48,7 @@ func eval(v Val, env *Environment) Val {
 					for !params.isNull() && !args.isNull() {
 						param = params.car()
 						arg = args.car()
-						envc.put(string(param.str), arg)
+						envc.put(param.symb, arg)
 
 						params = params.cdr()
 						args = args.cdr()
@@ -67,7 +67,7 @@ func eval(v Val, env *Environment) Val {
 					for !params.isNull() && !args.isNull() {
 						param = params.car()
 						arg = args.car()
-						envc.put(string(param.str), arg)
+						envc.put(param.symb, arg)
 
 						params = params.cdr()
 						args = args.cdr()
@@ -94,7 +94,7 @@ func eval(v Val, env *Environment) Val {
 			panic("attempted to call a non-callable value at " + v.String())
 		}
 	case tsymbol:
-		return env.get(string(v.str))
+		return env.get(v.symb)
 	default:
 		return v
 	}

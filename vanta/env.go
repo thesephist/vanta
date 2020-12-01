@@ -44,8 +44,10 @@ var globalScope = map[string]Val{
 	}),
 	"len": fn(func(args Val) Val {
 		switch args.car().tag {
-		case tstr, tsymbol:
+		case tstr:
 			return number(float64(len(args.car().str)))
+		case tsymbol:
+			return number(float64(len(args.car().symb)))
 		default:
 			return number(0)
 		}
@@ -247,8 +249,10 @@ var globalScope = map[string]Val{
 			return str([]byte("boolean"))
 		case tnumber:
 			return str([]byte("number"))
-		case tstr, tsymbol:
+		case tstr:
 			return str([]byte("string"))
+		case tsymbol:
+			return str([]byte("symbol"))
 		case tcons:
 			return str([]byte("list"))
 		case tfn, tmacro:

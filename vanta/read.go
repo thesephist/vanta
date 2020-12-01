@@ -27,19 +27,19 @@ func (r *reader) next() byte {
 	return cur
 }
 
-func (r *reader) nextSpan() []byte {
+func (r *reader) nextSpan() string {
 	acc := []byte{}
 	for r.index < len(r.str) {
 		switch cur := r.peek(); cur {
 		case ' ', '\n', '\t', '(', ')':
-			return acc
+			return string(acc)
 		default:
 			r.next()
 			acc = append(acc, cur)
 		}
 	}
 
-	return acc
+	return string(acc)
 }
 
 func (r *reader) forward() {
@@ -67,7 +67,7 @@ func parse(r *reader) Val {
 			r.next()
 			r.forward()
 			return list(
-				symbol([]byte("quote")),
+				symbol("quote"),
 				list(parse(r), null),
 			)
 		case '\'':
@@ -126,7 +126,7 @@ func parse(r *reader) Val {
 		default:
 			span := r.nextSpan()
 			r.forward()
-			n, err := strconv.ParseFloat(string(span), 64)
+			n, err := strconv.ParseFloat(span, 64)
 			if err != nil {
 				return symbol(span)
 			} else {
@@ -146,7 +146,7 @@ func Read(s string) Val {
 	r.forward() // consume leading comments
 
 	tail := list(parse(&r), null)
-	prog := list(symbol([]byte("do")), tail)
+	prog := list(symbol("do"), tail)
 	r.forward()
 	for r.index < len(r.str) {
 		switch r.peek() {

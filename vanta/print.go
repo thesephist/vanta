@@ -26,7 +26,7 @@ func Print(v Val) string {
 		strings.ReplaceAll(s, "'", "\\'")
 		return s
 	case tsymbol:
-		return string(v.str)
+		return v.symb
 	case tcons:
 		term := v
 		acc := []string{}

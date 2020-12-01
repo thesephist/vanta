@@ -33,8 +33,10 @@ type Val struct {
 	tag int
 	// number
 	number float64
-	// str, symbol
+	// string value, mutable byte slice
 	str []byte
+	// symbol value, immutable string
+	symb string
 	// list
 	cell *cons
 	// fn, macro
@@ -57,6 +59,7 @@ func (v Val) clone() Val {
 		tag:    v.tag,
 		number: v.number,
 		str:    dststr,
+		symb:   v.symb,
 		cell:   cell,
 		fn:     v.fn,
 	}
@@ -79,8 +82,10 @@ func (v Val) Equals(w Val) bool {
 		return true
 	case tnumber:
 		return v.number == w.number
-	case tstr, tsymbol:
+	case tstr:
 		return bytes.Equal(v.str, w.str)
+	case tsymbol:
+		return v.symb == w.symb
 	case tcons:
 		return v.car().Equals(w.car()) && v.cdr().Equals(w.cdr())
 	default:
@@ -134,8 +139,8 @@ func str(s []byte) Val {
 	return Val{tag: tstr, str: s}
 }
 
-func symbol(s []byte) Val {
-	return Val{tag: tsymbol, str: s}
+func symbol(s string) Val {
+	return Val{tag: tsymbol, symb: s}
 }
 
 func list(a, b Val) Val {
