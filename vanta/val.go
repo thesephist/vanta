@@ -42,7 +42,7 @@ type Val struct {
 }
 
 func (v Val) clone() Val {
-	dststr := make([]byte, len(v.str))
+	dststr := make([]byte, len(v.str), len(v.str))
 	copy(dststr, v.str)
 
 	cell := v.cell
@@ -113,9 +113,7 @@ func (v Val) asBool() bool {
 	return v.tag == tbooltrue
 }
 
-func null() Val {
-	return Val{tag: tnull}
-}
+var null = Val{tag: tnull}
 
 func boolean(v bool) Val {
 	if v {
@@ -124,6 +122,9 @@ func boolean(v bool) Val {
 
 	return Val{tag: tboolfalse}
 }
+
+var boolTrue = boolean(true)
+var boolFalse = boolean(false)
 
 func number(n float64) Val {
 	return Val{tag: tnumber, number: n}

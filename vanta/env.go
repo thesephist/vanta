@@ -31,8 +31,8 @@ type Environment struct {
 
 // globalScope contains all built-in functions and values in Klisp
 var globalScope = map[string]Val{
-	"true":  boolean(true),
-	"false": boolean(false),
+	"true":  boolTrue,
+	"false": boolFalse,
 	"car": fn(func(args Val) Val {
 		return args.car().car()
 	}),
@@ -113,7 +113,7 @@ var globalScope = map[string]Val{
 		case tstr:
 			return boolean(bytes.Compare(args.car().str, args.cdr().car().str) == 1)
 		default:
-			return boolean(false)
+			return boolFalse
 		}
 	}),
 	">": fn(func(args Val) Val {
@@ -123,7 +123,7 @@ var globalScope = map[string]Val{
 		case tstr:
 			return boolean(bytes.Compare(args.car().str, args.cdr().car().str) == -1)
 		default:
-			return boolean(false)
+			return boolFalse
 		}
 	}),
 	"+": fn(func(args Val) Val {
@@ -290,7 +290,7 @@ var globalScope = map[string]Val{
 
 			rest = rest.cdr()
 		}
-		return null()
+		return null
 	}),
 }
 
@@ -314,7 +314,7 @@ func (env *Environment) get(name string) Val {
 	}
 
 	if env.parent == nil {
-		return null()
+		return null
 	}
 
 	return env.parent.get(name)

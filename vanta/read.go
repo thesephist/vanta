@@ -62,13 +62,13 @@ func parse(r *reader) Val {
 	for r.index < len(r.str) {
 		switch r.peek() {
 		case ')':
-			return null()
+			return null
 		case ',':
 			r.next()
 			r.forward()
 			return list(
 				symbol([]byte("quote")),
-				list(parse(r), null()),
+				list(parse(r), null),
 			)
 		case '\'':
 			r.next()
@@ -89,8 +89,8 @@ func parse(r *reader) Val {
 			r.next()
 			r.forward()
 
-			acc := null()
-			tail := null()
+			acc := null
+			tail := null
 		parseSexpr:
 			for r.index < len(r.str) {
 				switch cur := r.peek(); cur {
@@ -111,7 +111,7 @@ func parse(r *reader) Val {
 					}
 					tail = cons
 				default:
-					cons := list(parse(r), null())
+					cons := list(parse(r), null)
 					r.forward()
 
 					if acc.tag == tnull {
@@ -135,7 +135,7 @@ func parse(r *reader) Val {
 		}
 	}
 
-	return null()
+	return null
 }
 
 // Read parses a string input into a (do...) S-expression containing all parsed
@@ -145,7 +145,7 @@ func Read(s string) Val {
 
 	r.forward() // consume leading comments
 
-	tail := list(parse(&r), null())
+	tail := list(parse(&r), null)
 	prog := list(symbol([]byte("do")), tail)
 	r.forward()
 	for r.index < len(r.str) {
@@ -155,7 +155,7 @@ func Read(s string) Val {
 			// in the reader as parse() will immediately return null.
 			return prog
 		default:
-			term := list(parse(&r), null())
+			term := list(parse(&r), null)
 			tail.cell.cdr = term
 			r.forward()
 			tail = term
