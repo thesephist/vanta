@@ -22,9 +22,9 @@ func Print(v Val) string {
 		return strconv.FormatFloat(v.number, 'f', 8, 64)
 	case tstr:
 		s := string(v.str)
-		strings.ReplaceAll(s, "\\", "\\\\")
-		strings.ReplaceAll(s, "'", "\\'")
-		return s
+		s = strings.ReplaceAll(s, "\\", "\\\\")
+		s = strings.ReplaceAll(s, "'", "\\'")
+		return "'" + s + "'"
 	case tsymbol:
 		return v.symb
 	case tcons:

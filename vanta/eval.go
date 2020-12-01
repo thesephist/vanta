@@ -8,6 +8,8 @@ package vanta
 // performance downsides of a tail call trampoline are not necessary.
 func eval(v Val, env *Environment) Val {
 	switch v.tag {
+	case tsymbol:
+		return env.get(v.symb)
 	case tcons:
 		if v.car().tag == tsymbol {
 			switch v.car().symb {
@@ -93,8 +95,6 @@ func eval(v Val, env *Environment) Val {
 		} else {
 			panic("attempted to call a non-callable value at " + v.String())
 		}
-	case tsymbol:
-		return env.get(v.symb)
 	default:
 		return v
 	}
