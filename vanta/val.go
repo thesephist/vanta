@@ -30,7 +30,7 @@ func (c cons) String() string {
 // function, or a macro. Call val.String() to get a string representation, and
 // val.Equals(val) to compare equality. Read, Eval, and Print operate on Vals.
 type Val struct {
-	tag int
+	tag byte
 	// number
 	number float64
 	// string value, mutable byte slice

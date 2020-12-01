@@ -258,7 +258,7 @@ var globalScope = map[string]Val{
 		case tfn, tmacro:
 			return str([]byte("function"))
 		default:
-			panic("Unknown Val type:" + strconv.Itoa(args.car().tag))
+			panic("Unknown Val type:" + strconv.Itoa(int(args.car().tag)))
 		}
 	}),
 	"string->number": fn(func(args Val) Val {
