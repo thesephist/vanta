@@ -50,7 +50,36 @@ var globalScope = map[string]Val{
 			return number(0)
 		}
 	}),
-	// TODO: implement get-slice, set-slice! for feature parity with Ink Klisp
+	"gets": fn(func(args Val) Val {
+		s := args.car()
+		start := int(args.cdr().car().number)
+		end := int(args.cdr().cdr().car().number)
+
+		if start < 0 {
+			start = 0
+		}
+		if end > len(s.str) {
+			end = len(s.str)
+		}
+
+		return str(s.str[start:end])
+	}),
+	"sets!": fn(func(args Val) Val {
+		s := args.car()
+		start := int(args.cdr().car().number)
+		substr := args.cdr().cdr().car().str
+		end := start + len(substr)
+
+		if start < 0 {
+			start = 0
+		}
+		if end > len(s.str) {
+			end = len(s.str)
+		}
+
+		copy(s.str[start:end], substr[0:end-start])
+		return s
+	}),
 	"point": fn(func(args Val) Val {
 		str := args.car().str
 		return number(float64(str[0]))
