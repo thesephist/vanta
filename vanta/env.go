@@ -33,16 +33,16 @@ type Environment struct {
 var globalScope = map[string]Val{
 	"true":  boolTrue,
 	"false": boolFalse,
-	"car": fn(func(args Val) Val {
+	"car": nativeFn(func(args Val) Val {
 		return args.car().car()
 	}),
-	"cdr": fn(func(args Val) Val {
+	"cdr": nativeFn(func(args Val) Val {
 		return args.car().cdr()
 	}),
-	"cons": fn(func(args Val) Val {
+	"cons": nativeFn(func(args Val) Val {
 		return list(args.car(), args.cdr().car())
 	}),
-	"len": fn(func(args Val) Val {
+	"len": nativeFn(func(args Val) Val {
 		switch args.car().tag {
 		case tstr:
 			return number(float64(len(args.car().str)))
@@ -52,7 +52,7 @@ var globalScope = map[string]Val{
 			return number(0)
 		}
 	}),
-	"gets": fn(func(args Val) Val {
+	"gets": nativeFn(func(args Val) Val {
 		s := args.car()
 		start := int(args.cdr().car().number)
 		end := int(args.cdr().cdr().car().number)
@@ -66,7 +66,7 @@ var globalScope = map[string]Val{
 
 		return str(s.str[start:end])
 	}),
-	"sets!": fn(func(args Val) Val {
+	"sets!": nativeFn(func(args Val) Val {
 		s := args.car()
 		start := int(args.cdr().car().number)
 		substr := args.cdr().cdr().car().str
@@ -82,33 +82,33 @@ var globalScope = map[string]Val{
 		copy(s.str[start:end], substr[0:end-start])
 		return s
 	}),
-	"point": fn(func(args Val) Val {
+	"point": nativeFn(func(args Val) Val {
 		str := args.car().str
 		return number(float64(str[0]))
 	}),
-	"char": fn(func(args Val) Val {
+	"char": nativeFn(func(args Val) Val {
 		return str([]byte{byte(args.car().number)})
 	}),
-	"sin": fn(func(args Val) Val {
+	"sin": nativeFn(func(args Val) Val {
 		return number(math.Sin(args.car().number))
 	}),
-	"cos": fn(func(args Val) Val {
+	"cos": nativeFn(func(args Val) Val {
 		return number(math.Cos(args.car().number))
 	}),
-	"floor": fn(func(args Val) Val {
+	"floor": nativeFn(func(args Val) Val {
 		return number(math.Trunc(args.car().number))
 	}),
-	"rand": fn(func(_ Val) Val {
+	"rand": nativeFn(func(_ Val) Val {
 		return number(rand.Float64())
 	}),
-	"time": fn(func(_ Val) Val {
+	"time": nativeFn(func(_ Val) Val {
 		unixSeconds := float64(time.Now().UnixNano()) / 1e9
 		return number(unixSeconds)
 	}),
-	"=": fn(func(args Val) Val {
+	"=": nativeFn(func(args Val) Val {
 		return boolean(args.car().Equals(args.cdr().car()))
 	}),
-	"<": fn(func(args Val) Val {
+	"<": nativeFn(func(args Val) Val {
 		switch args.car().tag {
 		case tnumber:
 			return boolean(args.car().number < args.cdr().car().number)
@@ -118,7 +118,7 @@ var globalScope = map[string]Val{
 			return boolFalse
 		}
 	}),
-	">": fn(func(args Val) Val {
+	">": nativeFn(func(args Val) Val {
 		switch args.car().tag {
 		case tnumber:
 			return boolean(args.car().number > args.cdr().car().number)
@@ -128,7 +128,7 @@ var globalScope = map[string]Val{
 			return boolFalse
 		}
 	}),
-	"+": fn(func(args Val) Val {
+	"+": nativeFn(func(args Val) Val {
 		rest := args.cdr()
 		if args.car().tag == tnumber {
 			acc := args.car().number
@@ -145,7 +145,7 @@ var globalScope = map[string]Val{
 		}
 		return str(acc)
 	}),
-	"-": fn(func(args Val) Val {
+	"-": nativeFn(func(args Val) Val {
 		acc := args.car().number
 		rest := args.cdr()
 		for !rest.isNull() {
@@ -154,7 +154,7 @@ var globalScope = map[string]Val{
 		}
 		return number(acc)
 	}),
-	"*": fn(func(args Val) Val {
+	"*": nativeFn(func(args Val) Val {
 		acc := args.car().number
 		rest := args.cdr()
 		for !rest.isNull() {
@@ -163,7 +163,7 @@ var globalScope = map[string]Val{
 		}
 		return number(acc)
 	}),
-	"/": fn(func(args Val) Val {
+	"/": nativeFn(func(args Val) Val {
 		acc := args.car().number
 		rest := args.cdr()
 		for !rest.isNull() {
@@ -172,7 +172,7 @@ var globalScope = map[string]Val{
 		}
 		return number(acc)
 	}),
-	"#": fn(func(args Val) Val {
+	"#": nativeFn(func(args Val) Val {
 		acc := args.car().number
 		rest := args.cdr()
 		for !rest.isNull() {
@@ -181,7 +181,7 @@ var globalScope = map[string]Val{
 		}
 		return number(acc)
 	}),
-	"%": fn(func(args Val) Val {
+	"%": nativeFn(func(args Val) Val {
 		acc := int64(args.car().number)
 		rest := args.cdr()
 		for !rest.isNull() {
@@ -190,7 +190,7 @@ var globalScope = map[string]Val{
 		}
 		return number(float64(acc))
 	}),
-	"&": fn(func(args Val) Val {
+	"&": nativeFn(func(args Val) Val {
 		rest := args.cdr()
 		if args.car().tag == tnumber {
 			acc := int64(args.car().number)
@@ -207,7 +207,7 @@ var globalScope = map[string]Val{
 		}
 		return boolean(acc)
 	}),
-	"|": fn(func(args Val) Val {
+	"|": nativeFn(func(args Val) Val {
 		rest := args.cdr()
 		if args.car().tag == tnumber {
 			acc := int64(args.car().number)
@@ -224,7 +224,7 @@ var globalScope = map[string]Val{
 		}
 		return boolean(acc)
 	}),
-	"^": fn(func(args Val) Val {
+	"^": nativeFn(func(args Val) Val {
 		rest := args.cdr()
 		if args.car().tag == tnumber {
 			acc := int64(args.car().number)
@@ -241,7 +241,7 @@ var globalScope = map[string]Val{
 		}
 		return boolean(acc)
 	}),
-	"type": fn(func(args Val) Val {
+	"type": nativeFn(func(args Val) Val {
 		switch args.car().tag {
 		case tnull:
 			return str([]byte("()"))
@@ -261,7 +261,7 @@ var globalScope = map[string]Val{
 			panic("Unknown Val type:" + strconv.Itoa(int(args.car().tag)))
 		}
 	}),
-	"string->number": fn(func(args Val) Val {
+	"string->number": nativeFn(func(args Val) Val {
 		operand := args.car()
 		if operand.tag == tstr {
 			n, err := strconv.ParseFloat(string(operand.str), 64)
@@ -274,10 +274,10 @@ var globalScope = map[string]Val{
 			return number(0)
 		}
 	}),
-	"number->string": fn(func(args Val) Val {
+	"number->string": nativeFn(func(args Val) Val {
 		return str([]byte(strconv.FormatFloat(args.car().number, 'f', 8, 64)))
 	}),
-	"print": fn(func(args Val) Val {
+	"print": nativeFn(func(args Val) Val {
 		rest := args
 		for {
 			cur := rest.car()

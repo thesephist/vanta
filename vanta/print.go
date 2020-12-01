@@ -50,6 +50,6 @@ func Print(v Val) string {
 		return "(" + strings.Join(acc, " ") + ")"
 	default:
 		// tfn, tmacro
-		return "(function)"
+		return Print(*v.fndef)
 	}
 }

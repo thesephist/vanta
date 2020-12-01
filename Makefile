@@ -7,6 +7,11 @@ run:
 	go run -race ${VANTA}
 
 
+# if source tree cloned
+repl:
+	go run -race ${VANTA} -i ../klisp/lib/klisp.klisp
+
+
 # if source tree cloned 
 run-all:
 	go run -race ${VANTA} ../klisp/lib/klisp.klisp ../klisp/test/*.klisp

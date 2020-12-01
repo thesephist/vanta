@@ -57,7 +57,7 @@ func eval(v Val, env *Environment) Val {
 					}
 
 					return eval(body, &envc)
-				})
+				}, v)
 			case "macro":
 				paramsTpl := v.cdr().car()
 				body := v.cdr().cdr().car()
@@ -76,7 +76,7 @@ func eval(v Val, env *Environment) Val {
 					}
 
 					return eval(body, &envc)
-				})
+				}, v)
 			}
 		}
 

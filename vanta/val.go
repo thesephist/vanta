@@ -40,7 +40,8 @@ type Val struct {
 	// list
 	cell *cons
 	// fn, macro
-	fn func(Val) Val
+	fn    func(Val) Val
+	fndef *Val
 }
 
 func (v Val) clone() Val {
@@ -150,10 +151,14 @@ func list(a, b Val) Val {
 	}}
 }
 
-func fn(f func(Val) Val) Val {
-	return Val{tag: tfn, fn: f}
+func fn(f func(Val) Val, body Val) Val {
+	return Val{tag: tfn, fn: f, fndef: &body}
 }
 
-func macro(f func(Val) Val) Val {
-	return Val{tag: tmacro, fn: f}
+func macro(f func(Val) Val, body Val) Val {
+	return Val{tag: tmacro, fn: f, fndef: &body}
+}
+
+func nativeFn(f func(Val) Val) Val {
+	return fn(f, symbol("(function)"))
 }
