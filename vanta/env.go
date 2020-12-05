@@ -275,7 +275,11 @@ var globalScope = map[string]Val{
 		}
 	}),
 	"number->string": nativeFn(func(args Val) Val {
-		return str([]byte(strconv.FormatFloat(args.car().number, 'f', 8, 64)))
+		v := args.car()
+		if i := int64(v.number); v.number == float64(i) {
+			return str([]byte(strconv.FormatInt(i, 10)))
+		}
+		return str([]byte(strconv.FormatFloat(v.number, 'f', 8, 64)))
 	}),
 	"print": nativeFn(func(args Val) Val {
 		rest := args

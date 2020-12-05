@@ -9,7 +9,7 @@ run:
 
 # if source tree cloned
 repl:
-	go run -race ${VANTA} -i ../klisp/lib/klisp.klisp
+	rlwrap go run -race ${VANTA} -i ../klisp/lib/klisp.klisp
 
 
 # if source tree cloned 
