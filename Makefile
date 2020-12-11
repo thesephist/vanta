@@ -9,12 +9,15 @@ run:
 
 # if source tree cloned
 repl:
-	rlwrap go run -race ${VANTA} -i ../klisp/lib/klisp.klisp
+	rlwrap go run -race ${VANTA} -i \
+		../klisp/lib/klisp.klisp ../klisp/lib/math.klisp
 
 
 # if source tree cloned 
 run-all:
-	go run -race ${VANTA} ../klisp/lib/klisp.klisp ../klisp/test/*.klisp
+	go run -race ${VANTA} \
+		../klisp/lib/klisp.klisp ../klisp/lib/math.klisp \
+		../klisp/test/*.klisp
 
 
 # build for specific OS target

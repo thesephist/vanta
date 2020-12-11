@@ -281,6 +281,22 @@ var globalScope = map[string]Val{
 		}
 		return str([]byte(strconv.FormatFloat(v.number, 'f', 8, 64)))
 	}),
+	"string->symbol": nativeFn(func(args Val) Val {
+		operand := args.car()
+		if operand.tag == tstr {
+			return symbol(string(operand.str))
+		} else {
+			panic("string->symbol on non-string: " + Print(operand))
+		}
+	}),
+	"symbol->string": nativeFn(func(args Val) Val {
+		operand := args.car()
+		if operand.tag == tsymbol {
+			return str([]byte(operand.symb))
+		} else {
+			panic("symbol->string on non-symbol: " + Print(operand))
+		}
+	}),
 	"print": nativeFn(func(args Val) Val {
 		rest := args
 		for {
