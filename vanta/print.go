@@ -48,6 +48,8 @@ func Print(v Val) string {
 			}
 		}
 		return "(" + strings.Join(acc, " ") + ")"
+	case tthunk:
+		return Print(v.unwrap())
 	default:
 		// tfn, tmacro
 		return Print(*v.fndef)

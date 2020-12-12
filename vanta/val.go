@@ -14,6 +14,7 @@ const (
 	tcons
 	tfn
 	tmacro
+	tthunk
 )
 
 type cons struct {
@@ -39,9 +40,11 @@ type Val struct {
 	symb string
 	// list
 	cell *cons
-	// fn, macro
+	// fn, macro, thunk
 	fn    func(Val) Val
 	fndef *Val
+	// thunk
+	args *Val
 }
 
 func (v Val) clone() Val {
@@ -89,10 +92,20 @@ func (v Val) Equals(w Val) bool {
 		return v.symb == w.symb
 	case tcons:
 		return v.car().Equals(w.car()) && v.cdr().Equals(w.cdr())
+	case tthunk:
+		return v.unwrap().Equals(w.unwrap())
 	default:
 		// tfn, tmacro
 		return false
 	}
+}
+
+// Unwrap a thunk all the way to an eagerly evaluated value
+func (v Val) unwrap() Val {
+	for v.tag == tthunk {
+		v = v.fn(*v.args)
+	}
+	return v
 }
 
 func (v Val) car() Val {
@@ -161,4 +174,8 @@ func macro(f func(Val) Val, body Val) Val {
 
 func nativeFn(f func(Val) Val) Val {
 	return fn(f, symbol("(function)"))
+}
+
+func thunk(f func(Val) Val, args *Val) Val {
+	return Val{tag: tthunk, fn: f, args: args}
 }

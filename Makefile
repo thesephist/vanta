@@ -29,6 +29,10 @@ build:
 	go build -o klisp ${VANTA}
 
 
+install:
+	go build -o $$GOBIN/vanta
+
+
 # clean any generated files
 clean:
 	rm -rvf klisp klisp-*

@@ -1,12 +1,9 @@
 package vanta
 
 // eval evaluates a Klisp form in a given Environment env, recursively calling
-// itself where appropriate.
-//
-// At the moment, eval does not support proper tail
-// calls. For small programs, Go's default stack is large enough, and the
-// performance downsides of a tail call trampoline are not necessary.
-func eval(v Val, env *Environment) Val {
+// itself where appropriate. eval properly optimizes tail calls using a return
+// trampoline through a tthunk type Val.
+func eval(v Val, env *Environment, eager bool) Val {
 	switch v.tag {
 	case tsymbol:
 		return env.get(v.symb)
@@ -17,7 +14,7 @@ func eval(v Val, env *Environment) Val {
 				return v.cdr().car()
 			case "def":
 				name := v.cdr().car()
-				val := eval(v.cdr().cdr().car(), env)
+				val := eval(v.cdr().cdr().car(), env, true)
 				env.put(name.symb, val)
 				return val
 			case "do":
@@ -25,21 +22,21 @@ func eval(v Val, env *Environment) Val {
 				var cdr Val
 				for rest.tag == tcons {
 					if cdr = rest.cdr(); cdr.isNull() {
-						return eval(rest.car(), env)
+						return eval(rest.car(), env, eager)
 					}
 
-					eval(rest.car(), env)
+					eval(rest.car(), env, true)
 					rest = cdr
 				}
 			case "if":
 				cond := v.cdr().car()
 				var body Val
-				if eval(cond, env).tag == tbooltrue {
+				if eval(cond, env, true).tag == tbooltrue {
 					body = v.cdr().cdr().car()
 				} else {
 					body = v.cdr().cdr().cdr().car()
 				}
-				return eval(body, env)
+				return eval(body, env, eager)
 			case "fn":
 				paramsTpl := v.cdr().car()
 				body := v.cdr().cdr().car()
@@ -56,7 +53,7 @@ func eval(v Val, env *Environment) Val {
 						args = args.cdr()
 					}
 
-					return eval(body, &envc)
+					return eval(body, &envc, false)
 				}, v)
 			case "macro":
 				paramsTpl := v.cdr().car()
@@ -75,23 +72,28 @@ func eval(v Val, env *Environment) Val {
 						args = args.cdr()
 					}
 
-					return eval(body, &envc)
+					return eval(body, &envc, false)
 				}, v)
 			}
 		}
 
 		argcs := v.cdr()
-		fn := eval(v.car(), env)
+		fn := eval(v.car(), env, true)
 		if fn.tag == tfn {
 			head := argcs.clone()
 			rest := head
 			for !rest.isNull() {
-				rest.cell.car = eval(rest.car(), env)
+				rest.cell.car = eval(rest.car(), env, true)
 				rest = rest.cdr()
 			}
-			return fn.fn(head)
+
+			if eager {
+				return fn.fn(head).unwrap()
+			} else {
+				return thunk(fn.fn, &head)
+			}
 		} else if fn.tag == tmacro {
-			return eval(fn.fn(argcs), env)
+			return eval(fn.fn(argcs).unwrap(), env, eager)
 		} else {
 			panic("attempted to call a non-callable value at " + v.String())
 		}

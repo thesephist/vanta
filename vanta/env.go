@@ -19,7 +19,7 @@ func New() Environment {
 
 // Eval evaluates Klisp forms passed as Vals in the Environment Env.
 func (env *Environment) Eval(v Val) Val {
-	return eval(v, env)
+	return eval(v, env, true)
 }
 
 // Environment represents a lexical scope in which Klisp forms are evaluated.
