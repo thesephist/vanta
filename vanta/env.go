@@ -106,7 +106,14 @@ var globalScope = map[string]Val{
 		return number(unixSeconds)
 	}),
 	"=": nativeFn(func(args Val) Val {
-		return boolean(args.car().Equals(args.cdr().car()))
+		ref, rest := args.car(), args.cdr()
+		for !rest.isNull() {
+			if !ref.Equals(rest.car()) {
+				return boolean(false)
+			}
+			rest = rest.cdr()
+		}
+		return boolean(true)
 	}),
 	"<": nativeFn(func(args Val) Val {
 		switch args.car().tag {
